@@ -1,0 +1,30 @@
+FROM centos:7.6.1810
+
+# 安装中文字体和chrome
+RUN  yum install ibus-kkc vlgothic-* -y
+copy wkhtmltox-0.12.5-1.centos7.x86_64.rpm   /usr/local/src/
+RUN yum install -y xorg-x11-fonts-75dpi xorg-x11-fonts-Type1 libXext openssl libpng libjpeg libXrender libX11 freetype  fontconfig wget 
+
+RUN cd /usr/local/src &&\
+    rpm -ivh  wkhtmltox-0.12.5-1.centos7.x86_64.rpm 
+
+# 安装 golang 1.14.1
+ARG GO_VERSION=1.14.1
+RUN wget "https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz" && \
+    rm -rf /usr/local/go && \
+    tar -C /usr/local -xzf "go$GO_VERSION.linux-amd64.tar.gz" && \
+    rm -rf *.tar.gz 
+
+RUN echo "export GOROOT=/usr/local/go"  >> ~/.bash_profile
+RUN echo "export PATH=\$GOROOT/bin:\$JAVA_HOME/bin:\$PATH"  >> ~/.bash_profile
+RUN source ~/.bash_profile
+RUN mkdir  -p /go/src
+
+ENV GOROOT=/usr/local/go
+ARG GOPATH=/go/src
+ENV PATH=$GOROOT/bin:$JAVA_HOME/bin:$PATH
+
+## 修改时区
+RUN rm -f /etc/localtime \
+&& ln -sv /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+&& echo "Asia/Shanghai" > /etc/timezone
